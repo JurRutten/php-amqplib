@@ -938,15 +938,9 @@ abstract class AbstractConnection extends AbstractChannel
             $this->frame_max = (int)$v;
         }
 
-        // @see https://www.rabbitmq.com/heartbeats.html
-        // If either value is 0 (see below), the greater value of the two is used
-        // Otherwise the smaller value of the two is used
-        // A zero value indicates that a peer suggests disabling heartbeats entirely.
-        // To disable heartbeats, both peers have to opt in and use the value of 0
-        // For BC, this library opts for disabled heartbeat if client value is 0.
-        $v = $args->read_short();
-        if ($this->heartbeat > 0) {
-            $this->heartbeat = min($this->heartbeat, $v);
+        // use server proposed value if not set
+        if ($this->heartbeat === null) {
+            $this->heartbeat = $args->read_short();
         }
 
         $this->x_tune_ok($this->channel_max, $this->frame_max, $this->heartbeat);
